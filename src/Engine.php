@@ -4,14 +4,11 @@ namespace Emarref\Vacation;
 
 use Emarref\Vacation\Error;
 use Emarref\Vacation\Metadata;
-use Emarref\Vacation\Operation;
 use Emarref\Vacation\Controller;
 use Emarref\Vacation\Path;
 use Emarref\Vacation\Response\FactoryInterface;
 use Metadata\MetadataFactory;
 use Psr\Http\Message\IncomingRequestInterface;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 

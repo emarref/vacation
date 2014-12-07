@@ -2,10 +2,11 @@
 
 namespace Emarref\Vacation\Response;
 
+use Emarref\Http\Response;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Psr\Http\Message\IncomingRequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\OutgoingResponseInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Emarref\Vacation\Error;
@@ -62,13 +63,13 @@ class Factory implements FactoryInterface
     }
 
     /**
-     * @param ResponseInterface $response
-     * @param Adjustment        $adjustment
+     * @param OutgoingResponseInterface $response
+     * @param Adjustment                $adjustment
      */
-    protected function adjustResponse(ResponseInterface $response, Adjustment $adjustment)
+    protected function adjustResponse(OutgoingResponseInterface $response, Adjustment $adjustment)
     {
         if (null !== $adjustment->getStatusCode()) {
-            $response->setStatusCode($adjustment->getStatusCode());
+            $response->setStatus($adjustment->getStatusCode());
         }
 
         $adjustedHeaders = $adjustment->getHeaders();
@@ -100,11 +101,11 @@ class Factory implements FactoryInterface
     /**
      * @param int    $statusCode
      * @param string $content
-     * @return ResponseInterface
+     * @return OutgoingResponseInterface
      */
     protected function buildResponse($statusCode, $content = null)
     {
-        $response = new \MyResponse();
+        $response = new Response();
 
         $response->setHeader('Content-Type', 'application/json');
         $response->setStatusCode($statusCode);
@@ -119,7 +120,7 @@ class Factory implements FactoryInterface
 
     /**
      * @param \Exception $exception
-     * @return \MyResponse|ResponseInterface
+     * @return OutgoingResponseInterface
      */
     public function createError(\Exception $exception)
     {
@@ -129,7 +130,7 @@ class Factory implements FactoryInterface
     /**
      * @param IncomingRequestInterface $request
      * @param mixed                    $content
-     * @return ResponseInterface
+     * @return OutgoingResponseInterface
      */
     public function create(IncomingRequestInterface $request, $content = null)
     {

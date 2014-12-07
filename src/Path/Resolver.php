@@ -13,7 +13,7 @@ class Resolver implements ResolverInterface
     public function resolveRequest(IncomingRequestInterface $request)
     {
         $path = new Path();
-        $pathParameters = $request->getPathParams();
+        $pathParameters = $request->getAttributes();
 
         if (!empty($pathParameters['parent_type'])) {
             $isIdentified = !empty($pathParameters['parent_id']);
