@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "95eb8cfe74aa48b1785c101b7b84db6b",
+    "hash": "b5db4fdb36233d975d39e8b4277c4bee",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -128,7 +128,7 @@
         },
         {
             "name": "emarref/psr-symfony-http-bridge",
-            "version": "0.0.1",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/emarref/psr-symfony-http-bridge.git",
@@ -957,7 +957,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "emarref/psr-symfony-http-bridge": 20
+    },
     "prefer-stable": false,
     "platform": [],
     "platform-dev": []

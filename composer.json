@@ -12,7 +12,7 @@
         "symfony/validator": "~2.5.0",
         "symfony/event-dispatcher": "~2.5.0",
         "symfony/form": "~2.5.0",
-        "emarref/psr-symfony-http-bridge": "*"
+        "emarref/psr-symfony-http-bridge": "dev-master"
     },
     "suggest": {
         "squizlabs/php_codesniffer": "PHP_CodeSniffer tokenises PHP, JavaScript and CSS files and detects violations of a defined set of coding standards."
