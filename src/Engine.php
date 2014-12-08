@@ -9,10 +9,11 @@ use Emarref\Vacation\Path;
 use Emarref\Vacation\Response\FactoryInterface;
 use Metadata\MetadataFactory;
 use Psr\Http\Message\IncomingRequestInterface;
+use Psr\Http\Message\OutgoingResponseInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 
-abstract class Engine
+class Engine
 {
     /**
      * @var Path\ResolverInterface;
@@ -122,7 +123,7 @@ abstract class Engine
     /**
      * @param IncomingRequestInterface $request
      * @throws \Exception
-     * @return ResponseInterface
+     * @return OutgoingResponseInterface
      */
     public function execute(IncomingRequestInterface $request)
     {
@@ -150,6 +151,7 @@ abstract class Engine
             $form->submit($request->getBodyParams(), false);
 
             if (!$form->isValid()) {
+                // TODO Return validation errors
                 return $this->responseFactory->createError(new Error\Client('Bad Request', 400));
             }
 
