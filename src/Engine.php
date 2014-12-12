@@ -54,30 +54,14 @@ class Engine
         $this->responseFactory            = $responseFactory;
     }
 
-    public function registerResourceController(Controller\ResourceControllerInterface $resourceController)
+    public function registerResourceController($resourceController)
     {
         $this->resourceControllerResolver->registerResourceController($resourceController);
     }
 
-    private function getErrorMessages(\Symfony\Component\Form\Form $form) {
-        $errors = array();
-
-        foreach ($form->getErrors() as $key => $error) {
-            $errors[] = $error->getMessage();
-        }
-
-        foreach ($form->all() as $child) {
-            if (!$child->isValid()) {
-                $errors[$child->getName()] = $this->getErrorMessages($child);
-            }
-        }
-
-        return $errors;
-    }
-
     /**
      * @param IncomingRequestInterface $request
-     * @return Controller\ResourceControllerInterface
+     * @return object
      * @throws \Exception
      */
     protected function resolveController(IncomingRequestInterface $request)
@@ -130,7 +114,7 @@ class Engine
         try {
             $controller = $this->resolveController($request);
         } catch (\Exception $e) {
-            return $this->responseFactory->createError(new Error\Client('Not Found', 404));
+            return $this->responseFactory->createError(new Error\Client('Not Found', 404, $e));
         }
 
         /** @var Metadata\Controller $controllerMetadata */
@@ -139,7 +123,7 @@ class Engine
         try {
             $operationMetadata = $this->resolveOperationMetadata($controllerMetadata, $request);
         } catch (\Exception $e) {
-            return $this->responseFactory->createError(new Error\Client('Method Not Alowed', 405));
+            return $this->responseFactory->createError(new Error\Client('Method Not Allowed', 405, $e));
         }
 
         $arguments = [];
@@ -152,7 +136,7 @@ class Engine
 
             if (!$form->isValid()) {
                 // TODO Return validation errors
-                return $this->responseFactory->createError(new Error\Client('Bad Request', 400));
+                return $this->responseFactory->createFormError($form);
             }
 
             $arguments[] = $form;

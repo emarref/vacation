@@ -20,7 +20,7 @@ class PathSegment
     public function __construct(array $values)
     {
         $this->name       = $values['value'];
-        $this->identified = $values['identified'];
+        $this->identified = isset($values['identified']) ? (boolean)$values['identified'] : false;
     }
 
     /**

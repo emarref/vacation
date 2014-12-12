@@ -25,16 +25,16 @@ class Resolver
     }
 
     /**
-     * @param ResourceControllerInterface $controller
+     * @param object $controller
      */
-    public function registerResourceController(ResourceControllerInterface $controller)
+    public function registerResourceController($controller)
     {
         $this->registry->add($controller);
     }
 
     /**
      * @param Path\Path $path
-     * @return ResourceControllerInterface|null
+     * @return object|null
      */
     public function resolveResourceController(Path\Path $path)
     {

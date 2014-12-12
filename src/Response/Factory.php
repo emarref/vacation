@@ -10,6 +10,7 @@ use Psr\Http\Message\OutgoingResponseInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Emarref\Vacation\Error;
+use Symfony\Component\Form\FormInterface;
 
 class Factory implements FactoryInterface
 {
@@ -24,11 +25,6 @@ class Factory implements FactoryInterface
     private $dispatcher;
 
     /**
-     * @var bool
-     */
-    private $includeType = false;
-
-    /**
      * @param SerializerInterface      $serializer
      * @param EventDispatcherInterface $dispatcher
      */
@@ -36,22 +32,6 @@ class Factory implements FactoryInterface
     {
         $this->serializer = $serializer;
         $this->dispatcher = $dispatcher;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function isIncludeType()
-    {
-        return $this->includeType;
-    }
-
-    /**
-     * @param boolean $includeType
-     */
-    public function setIncludeType($includeType)
-    {
-        $this->includeType = $includeType;
     }
 
     /**
@@ -83,19 +63,11 @@ class Factory implements FactoryInterface
 
     /**
      * @param mixed $content
-     * @param string|null $type
      * @return string
      */
-    protected function getPayload($content, $type = null)
+    protected function getPayload($content)
     {
-        $payload = $this->serializer->serialize($content, 'json', $this->getSerializationContext());
-
-        if (null !== $type) {
-            $deserializedPayload = $this->serializer->deserialize($payload, 'array', 'json');
-            $payload = json_encode([$type => $deserializedPayload]);
-        }
-
-        return $payload;
+        return $this->serializer->serialize($content, 'json', $this->getSerializationContext());
     }
 
     /**
@@ -118,13 +90,52 @@ class Factory implements FactoryInterface
         return $response;
     }
 
+    protected function fromChildren(FormInterface $form, $prefix = null)
+    {
+        $errors = [];
+
+        if ($form->isRoot()) {
+            foreach ($form->getErrors() as $error) {
+                $errors[] = ['type' => 'global', 'message' => $error->getMessage()];
+            }
+        }
+
+        foreach ($form->all() as $field => $child) {
+            if (!count($child->getErrors()) && !count($child->all())) {
+                continue;
+            }
+
+            $propertyPath = (string)$child->getPropertyPath();
+            $propertyPath = $prefix ? sprintf('%s.%s', $prefix, $propertyPath) : $propertyPath;
+
+            foreach ($child->getErrors() as $error) {
+                $errors[] = [
+                    'type'    => 'field',
+                    'field'   => $propertyPath,
+                    'message' => $error->getMessage()
+                ];
+            }
+
+            $errors = array_merge($errors, $this->fromChildren($child, $propertyPath));
+        }
+
+        return $errors;
+    }
+
+    public function createFormError(FormInterface $form)
+    {
+        $errors = $this->fromChildren($form);
+
+        return $this->buildResponse(400, $this->getPayload(['errors' => $errors]));
+    }
+
     /**
      * @param \Exception $exception
      * @return OutgoingResponseInterface
      */
     public function createError(\Exception $exception)
     {
-        return $this->buildResponse($exception->getCode(), $this->getPayload(['messages' => [$exception->getMessage()]], 'error'));
+        return $this->buildResponse($exception->getCode(), $this->getPayload(['error' => ['messages' => [$exception->getMessage()]]]));
     }
 
     /**
@@ -152,7 +163,7 @@ class Factory implements FactoryInterface
                     break;
             }
 
-            $content  = $this->getPayload($content, $this->isIncludeType() ? $request->getPathParams()['type'] : null);
+            $content  = $this->getPayload($content);
         }
 
         $response = $this->buildResponse($statusCode, $content);

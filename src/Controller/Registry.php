@@ -18,9 +18,9 @@ class Registry implements IteratorAggregate
     }
 
     /**
-     * @param ResourceControllerInterface $resourceController
+     * @param object $resourceController
      */
-    public function add(ResourceControllerInterface $resourceController)
+    public function add($resourceController)
     {
         $this->controllers[] = $resourceController;
     }

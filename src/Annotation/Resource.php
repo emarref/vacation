@@ -2,6 +2,8 @@
 
 namespace Emarref\Vacation\Annotation;
 
+use Emarref\Vacation\Path;
+
 /**
  * @Annotation
  */
