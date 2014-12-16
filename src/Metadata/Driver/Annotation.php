@@ -25,21 +25,18 @@ class Annotation implements DriverInterface
 
     /**
      * @param \ReflectionClass $class
-     *
      * @return \Metadata\ClassMetadata
      */
     public function loadMetadataForClass(\ReflectionClass $class)
     {
-        $metadata = new Metadata\Controller($class->getName());
-
-        /** @var Vacation\Resource $resourceAnnotation */
         $resourceAnnotation = $this->reader->getClassAnnotation($class, 'Emarref\\Vacation\\Annotation\\Resource');
 
-        $metadata->path = new Path\Path();
-
-        foreach ($resourceAnnotation->getPathSegments() as $pathSegment) {
-            $metadata->path->addSection(new Path\NamedSection($pathSegment->getName(), $pathSegment->isIdentified()));
+        if (null === $resourceAnnotation) {
+            throw new \InvalidArgumentException(sprintf('Cannot get resource metadata for class "%s".', $class->getName()));
         }
+
+        $resourceMetadata = new Metadata\Resource($class->getName());
+        $resourceMetadata->path = $resourceAnnotation->getPath();
 
         foreach ($class->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
             /** @var Vacation\Operation $operationAnnotation */
@@ -54,13 +51,9 @@ class Annotation implements DriverInterface
             $operationMetadata->parameters    = $operationAnnotation->getParameters();
             $operationMetadata->formFactory   = $operationAnnotation->getFormFactory();
 
-            foreach ($method->getParameters() as $parameter) {
-                $operationMetadata->arguments[$parameter->getName()] = $parameter->getClass() ? $parameter->getClass()->getName() : null;
-            }
-
-            $metadata->operations[] = $operationMetadata;
+            $resourceMetadata->operations[] = $operationMetadata;
         }
 
-        return $metadata;
+        return $resourceMetadata;
     }
 }

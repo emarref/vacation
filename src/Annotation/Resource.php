@@ -10,23 +10,23 @@ use Emarref\Vacation\Path;
 class Resource
 {
     /**
-     * @var PathSegment[]
+     * @var string
      */
-    private $pathSegments;
+    private $path;
 
     /**
      * @param array $values
      */
-    public function __construct(array $values)
+    public function __construct(array $values = [])
     {
-        $this->pathSegments = $values['value'];
+        $this->path = $values['value'];
     }
 
     /**
-     * @return PathSegment[]
+     * @return string
      */
-    public function getPathSegments()
+    public function getPath()
     {
-        return $this->pathSegments;
+        return $this->path;
     }
 }

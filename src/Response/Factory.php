@@ -3,12 +3,11 @@
 namespace Emarref\Vacation\Response;
 
 use Emarref\Http\Response;
+use Emarref\Http\Stream;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Psr\Http\Message\IncomingRequestInterface;
 use Psr\Http\Message\OutgoingResponseInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\EventDispatcher\GenericEvent;
 use Emarref\Vacation\Error;
 use Symfony\Component\Form\FormInterface;
 
@@ -20,18 +19,11 @@ class Factory implements FactoryInterface
     private $serializer;
 
     /**
-     * @var EventDispatcherInterface
-     */
-    private $dispatcher;
-
-    /**
      * @param SerializerInterface      $serializer
-     * @param EventDispatcherInterface $dispatcher
      */
-    public function __construct(SerializerInterface $serializer, EventDispatcherInterface $dispatcher)
+    public function __construct(SerializerInterface $serializer)
     {
         $this->serializer = $serializer;
-        $this->dispatcher = $dispatcher;
     }
 
     /**
@@ -40,25 +32,6 @@ class Factory implements FactoryInterface
     protected function getSerializationContext()
     {
         return (new SerializationContext())->setSerializeNull(true);
-    }
-
-    /**
-     * @param OutgoingResponseInterface $response
-     * @param Adjustment                $adjustment
-     */
-    protected function adjustResponse(OutgoingResponseInterface $response, Adjustment $adjustment)
-    {
-        if (null !== $adjustment->getStatusCode()) {
-            $response->setStatus($adjustment->getStatusCode());
-        }
-
-        $adjustedHeaders = $adjustment->getHeaders();
-
-        if (!empty($adjustedHeaders)) {
-            foreach ($adjustedHeaders as $headerName => $headerValue) {
-                $response->setHeader($headerName, $headerValue);
-            }
-        }
     }
 
     /**
@@ -83,7 +56,7 @@ class Factory implements FactoryInterface
         $response->setStatusCode($statusCode);
 
         if (null !== $content) {
-            $body = new Message($content);
+            $body = new Stream($content);
             $response->setBody($body);
         }
 
@@ -166,12 +139,6 @@ class Factory implements FactoryInterface
             $content  = $this->getPayload($content);
         }
 
-        $response = $this->buildResponse($statusCode, $content);
-
-        $adjustment = new Adjustment();
-        $this->dispatcher->dispatch('vacation.response.adjust', new GenericEvent($adjustment));
-        $this->adjustResponse($response, $adjustment);
-
-        return $response;
+        return $this->buildResponse($statusCode, $content);
     }
 }

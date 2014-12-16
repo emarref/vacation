@@ -2,6 +2,8 @@
 
 namespace Emarref\Vacation\Response;
 
+use Psr\Http\Message\OutgoingResponseInterface;
+
 class Adjustment
 {
     /**
@@ -74,5 +76,23 @@ class Adjustment
     public function getHeaders()
     {
         return $this->headers;
+    }
+
+    /**
+     * @param OutgoingResponseInterface $response
+     */
+    public function adjust(OutgoingResponseInterface $response)
+    {
+        if (null !== $this->getStatusCode()) {
+            $response->setStatus($this->getStatusCode());
+        }
+
+        $adjustedHeaders = $this->getHeaders();
+
+        if (!empty($adjustedHeaders)) {
+            foreach ($adjustedHeaders as $headerName => $headerValue) {
+                $response->setHeader($headerName, $headerValue);
+            }
+        }
     }
 }

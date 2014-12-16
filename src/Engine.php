@@ -6,24 +6,22 @@ use Emarref\Vacation\Error;
 use Emarref\Vacation\Metadata;
 use Emarref\Vacation\Controller;
 use Emarref\Vacation\Path;
-use Emarref\Vacation\Response\FactoryInterface;
+use Emarref\Vacation\Response;
 use Metadata\MetadataFactory;
 use Psr\Http\Message\IncomingRequestInterface;
 use Psr\Http\Message\OutgoingResponseInterface;
-use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Form\FormInterface;
 
 class Engine
 {
-    /**
-     * @var Path\ResolverInterface;
-     */
-    private $pathResolver;
+    const EVENT_RESPONSE_ADJUST = 'vacation.response.adjust';
 
     /**
-     * @var Controller\Resolver
+     * @var Controller\RegistryInterface
      */
-    private $resourceControllerResolver;
+    private $controllerRegistry;
 
     /**
      * @var MetadataFactory
@@ -31,32 +29,39 @@ class Engine
     private $metadataFactory;
 
     /**
-     * @var FormFactoryInterface
-     */
-    private $formFactory;
-
-    /**
-     * @var FactoryInterface
+     * @var Response\FactoryInterface
      */
     private $responseFactory;
 
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $dispatcher;
+
+    /**
+     * @param Controller\Registry       $controllerRegistry
+     * @param MetadataFactory           $metadataFactory
+     * @param Response\FactoryInterface $responseFactory
+     * @param EventDispatcherInterface  $dispatcher
+     */
     public function __construct(
-        Path\ResolverInterface $pathResolver,
-        Controller\Resolver $resourceControllerResolver,
+        Controller\Registry $controllerRegistry,
         MetadataFactory $metadataFactory,
-        FormFactoryInterface $formFactory,
-        FactoryInterface $responseFactory
+        Response\FactoryInterface $responseFactory,
+        EventDispatcherInterface $dispatcher
     ) {
-        $this->pathResolver               = $pathResolver;
-        $this->resourceControllerResolver = $resourceControllerResolver;
-        $this->metadataFactory            = $metadataFactory;
-        $this->formFactory                = $formFactory;
-        $this->responseFactory            = $responseFactory;
+        $this->controllerRegistry = $controllerRegistry;
+        $this->metadataFactory    = $metadataFactory;
+        $this->responseFactory    = $responseFactory;
+        $this->dispatcher         = $dispatcher;
     }
 
-    public function registerResourceController($resourceController)
+    /**
+     * @param object $controller
+     */
+    public function registerController($controller)
     {
-        $this->resourceControllerResolver->registerResourceController($resourceController);
+        $this->controllerRegistry->registerController($controller);
     }
 
     /**
@@ -66,8 +71,7 @@ class Engine
      */
     protected function resolveController(IncomingRequestInterface $request)
     {
-        $path       = $this->pathResolver->resolveRequest($request);
-        $controller = $this->resourceControllerResolver->resolveResourceController($path);
+        $controller = $this->controllerRegistry->resolveController($request);
 
         if (null === $controller) {
             throw new \Exception('Controller not found');
@@ -77,16 +81,19 @@ class Engine
     }
 
     /**
-     * @param Metadata\Controller      $controllerMetadata
+     * @param object                   $controller
      * @param IncomingRequestInterface $request
      * @return Metadata\Operation
      * @throws \Exception
      */
-    protected function resolveOperationMetadata(Metadata\Controller $controllerMetadata, IncomingRequestInterface $request)
+    protected function resolveOperationMetadata($controller, IncomingRequestInterface $request)
     {
-        foreach ($controllerMetadata->operations as $operation) {
-            if (strtoupper($operation->requestMethod) === $request->getMethod()) {
-                return $operation;
+        /** @var Metadata\Resource $resourceMetadata */
+        $resourceMetadata = $this->metadataFactory->getMetadataForClass(get_class($controller));
+
+        foreach ($resourceMetadata->operations as $operationMetadata) {
+            if (strtoupper($operationMetadata->requestMethod) === $request->getMethod()) {
+                return $operationMetadata;
             }
         }
 
@@ -117,11 +124,8 @@ class Engine
             return $this->responseFactory->createError(new Error\Client('Not Found', 404, $e));
         }
 
-        /** @var Metadata\Controller $controllerMetadata */
-        $controllerMetadata = $this->metadataFactory->getMetadataForClass(get_class($controller));
-
         try {
-            $operationMetadata = $this->resolveOperationMetadata($controllerMetadata, $request);
+            $operationMetadata = $this->resolveOperationMetadata($controller, $request);
         } catch (\Exception $e) {
             return $this->responseFactory->createError(new Error\Client('Method Not Allowed', 405, $e));
         }
@@ -129,13 +133,17 @@ class Engine
         $arguments = [];
 
         if ($formFactory = $operationMetadata->formFactory) {
-            // TODO Pass identifier to formFactory
-            /** @var FormInterface $form */
-            $form = $controller->$formFactory($this->formFactory);
+            $form = call_user_func_array([$controller, $formFactory], [$request->getAttributes()]);
+
+            if (!$form instanceof FormInterface) {
+                return $this->responseFactory->createError(
+                    new Error\Server('Form factory must return an instance of FormInterface', 500)
+                );
+            }
+
             $form->submit($request->getBodyParams(), false);
 
             if (!$form->isValid()) {
-                // TODO Return validation errors
                 return $this->responseFactory->createFormError($form);
             }
 
@@ -146,6 +154,12 @@ class Engine
             $arguments[] = array_intersect_key($request->getQueryParams(), array_flip($operationMetadata->parameters));
         }
 
-        return $this->executeOperation([$controller, $operationMetadata->name], $request, $arguments);
+        $response = $this->executeOperation([$controller, $operationMetadata->name], $request, $arguments);
+
+        $adjustment = new Response\Adjustment();
+        $this->dispatcher->dispatch(self::EVENT_RESPONSE_ADJUST, new GenericEvent($adjustment));
+        $adjustment->adjust($response);
+
+        return $response;
     }
 }

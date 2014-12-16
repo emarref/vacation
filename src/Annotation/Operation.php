@@ -22,7 +22,10 @@ class Operation
      */
     private $formFactory;
 
-    public function __construct(array $values)
+    /**
+     * @param array $values
+     */
+    public function __construct(array $values = [])
     {
         $this->requestMethod = $values['value'];
 

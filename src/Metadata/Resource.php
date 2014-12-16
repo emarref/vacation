@@ -2,13 +2,12 @@
 
 namespace Emarref\Vacation\Metadata;
 
-use Emarref\Vacation\Path;
 use Metadata\MergeableClassMetadata;
 
-class Controller extends MergeableClassMetadata
+class Resource extends MergeableClassMetadata
 {
     /**
-     * @var Path\Path
+     * @var string
      */
     public $path;
 

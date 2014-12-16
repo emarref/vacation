@@ -2,34 +2,67 @@
 
 namespace Emarref\Vacation\Controller;
 
-use ArrayObject;
-use IteratorAggregate;
+use Emarref\Vacation\Path;
+use Emarref\Vacation\Metadata;
+use Metadata\MetadataFactoryInterface;
+use Psr\Http\Message\IncomingRequestInterface;
 
-class Registry implements IteratorAggregate
+class Registry
 {
     /**
-     * @var ArrayObject
+     * @var MetadataFactoryInterface
+     */
+    private $metadataFactory;
+
+    /**
+     * @var \ArrayObject
      */
     private $controllers;
 
-    public function __construct()
+    /**
+     * @param MetadataFactoryInterface $metadataFactory
+     */
+    public function __construct(MetadataFactoryInterface $metadataFactory)
     {
-        $this->controllers = new \ArrayIterator();
+        $this->metadataFactory = $metadataFactory;
+        $this->controllers     = new \ArrayObject();
     }
 
     /**
-     * @param object $resourceController
+     * @param object $controller
      */
-    public function add($resourceController)
+    public function registerController($controller)
     {
-        $this->controllers[] = $resourceController;
+        $this->controllers->append($controller);
     }
 
     /**
-     * @return ArrayObject
+     * @param IncomingRequestInterface $request
+     * @return object|null
      */
-    public function getIterator()
+    public function resolveController(IncomingRequestInterface $request)
     {
-        return $this->controllers;
+        foreach ($this->controllers as $controller) {
+            /** @var Metadata\Resource $resourceMetadata */
+            $resourceMetadata = $this->metadataFactory->getMetadataForClass(get_class($controller));
+
+            $pathSections = explode('/', trim($resourceMetadata->path, '/'));
+
+            array_walk($pathSections, function (&$section) use ($request) {
+                // Substitute annotated placeholders with their values to match request URI
+                if (0 === strpos($section, ':')) {
+                    $section = $request->getAttribute(substr($section, 1));
+                }
+            });
+
+            $controllerPath = trim(implode('/', $pathSections), '/');
+            $requestPath    = trim(parse_url($request->getUrl(), PHP_URL_PATH), '/');
+
+            if ($controllerPath === $requestPath) {
+                return $controller;
+            }
+        }
+
+        return null;
     }
 }
