@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "653e126b544bff7e4bcb8decb8562866",
+    "hash": "44cbcd7caaed3320a47f76954614498a",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -787,17 +787,17 @@
         },
         {
             "name": "symfony/validator",
-            "version": "v2.3.23",
+            "version": "v2.5.8",
             "target-dir": "Symfony/Component/Validator",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Validator.git",
-                "reference": "21aba61e348bbab121799cb0a9dd1d784d836d5f"
+                "reference": "2c162b640dde427dc64a8f62dc6f58df58958b9d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Validator/zipball/21aba61e348bbab121799cb0a9dd1d784d836d5f",
-                "reference": "21aba61e348bbab121799cb0a9dd1d784d836d5f",
+                "url": "https://api.github.com/repos/symfony/Validator/zipball/2c162b640dde427dc64a8f62dc6f58df58958b9d",
+                "reference": "2c162b640dde427dc64a8f62dc6f58df58958b9d",
                 "shasum": ""
             },
             "require": {
@@ -805,22 +805,31 @@
                 "symfony/translation": "~2.0"
             },
             "require-dev": {
+                "doctrine/annotations": "~1.0",
+                "doctrine/cache": "~1.0",
+                "egulias/email-validator": "~1.0",
                 "symfony/config": "~2.2",
+                "symfony/expression-language": "~2.4",
                 "symfony/http-foundation": "~2.1",
                 "symfony/intl": "~2.3",
+                "symfony/property-access": "~2.2",
                 "symfony/yaml": "~2.0"
             },
             "suggest": {
-                "doctrine/common": "",
+                "doctrine/annotations": "For using the annotation mapping. You will also need doctrine/cache.",
+                "doctrine/cache": "For using the default cached annotation reader and metadata cache.",
+                "egulias/email-validator": "Strict (RFC compliant) email validation",
                 "symfony/config": "",
+                "symfony/expression-language": "For using the 2.4 Expression validator",
                 "symfony/http-foundation": "",
                 "symfony/intl": "",
+                "symfony/property-access": "For using the 2.4 Validator API",
                 "symfony/yaml": ""
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.3-dev"
+                    "dev-master": "2.5-dev"
                 }
             },
             "autoload": {
@@ -844,7 +853,7 @@
             ],
             "description": "Symfony Validator Component",
             "homepage": "http://symfony.com",
-            "time": "2014-12-02 19:42:47"
+            "time": "2014-12-02 20:15:53"
         }
     ],
     "packages-dev": [],
