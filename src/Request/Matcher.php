@@ -12,7 +12,12 @@ class Matcher implements MatcherInterface
      */
     private $request;
 
-    public function __construct(IncomingRequestInterface $request)
+    /**
+     * @var string
+     */
+    private $prefix;
+
+    public function __construct(IncomingRequestInterface $request, $prefix = '')
     {
         $this->request = $request;
     }
@@ -36,8 +41,7 @@ class Matcher implements MatcherInterface
         $controllerPath = trim(implode('/', $pathSections), '/');
         $requestPath    = trim(parse_url($request->getUrl(), PHP_URL_PATH), '/');
 
-        // Return true if the end of the request path matches the controller path.
-        if (substr($requestPath, strlen($controllerPath) * -1) === $controllerPath) {
+        if (trim(sprintf('%s/%s', trim($this->prefix, '/') , $controllerPath), '/') === $requestPath) {
             return true;
         } else {
             return false;
