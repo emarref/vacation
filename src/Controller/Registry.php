@@ -2,8 +2,8 @@
 
 namespace Emarref\Vacation\Controller;
 
-use Emarref\Vacation\Path;
 use Emarref\Vacation\Metadata;
+use Emarref\Vacation\Request\MatcherInterface;
 use Metadata\MetadataFactoryInterface;
 use Psr\Http\Message\IncomingRequestInterface;
 
@@ -20,11 +20,17 @@ class Registry
     private $controllers;
 
     /**
+     * @var MatcherInterface
+     */
+    private $requestMatcher;
+
+    /**
      * @param MetadataFactoryInterface $metadataFactory
      */
-    public function __construct(MetadataFactoryInterface $metadataFactory)
+    public function __construct(MetadataFactoryInterface $metadataFactory, MatcherInterface $requestMatcher)
     {
         $this->metadataFactory = $metadataFactory;
+        $this->requestMatcher  = $requestMatcher;
         $this->controllers     = new \ArrayObject();
     }
 
@@ -45,6 +51,10 @@ class Registry
         foreach ($this->controllers as $controller) {
             /** @var Metadata\Resource $resourceMetadata */
             $resourceMetadata = $this->metadataFactory->getMetadataForClass(get_class($controller));
+
+            if ($this->requestMatcher->matches($resourceMetadata)) {
+                return $controller;
+            }
 
             $pathSections = explode('/', trim($resourceMetadata->path, '/'));
 
