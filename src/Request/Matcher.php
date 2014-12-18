@@ -17,6 +17,10 @@ class Matcher implements MatcherInterface
      */
     private $prefix;
 
+    /**
+     * @param IncomingRequestInterface $request
+     * @param string                   $prefix
+     */
     public function __construct(IncomingRequestInterface $request, $prefix = '')
     {
         $this->request = $request;
