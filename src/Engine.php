@@ -118,12 +118,14 @@ class Engine
      */
     public function execute(IncomingRequestInterface $request)
     {
+        // Determine the controller/endpoint based on the URL
         try {
             $controller = $this->resolveController($request);
         } catch (\Exception $e) {
             return $this->responseFactory->createError(new Error\Client('Not Found', 404, $e));
         }
 
+        // Determine which operation to perform on the endpoint controller based on request method
         try {
             $operationMetadata = $this->resolveOperationMetadata($controller, $request);
         } catch (\Exception $e) {
@@ -132,6 +134,7 @@ class Engine
 
         $arguments = [];
 
+        // If the operation requires a form, use the factory to create one and validate it.
         if ($formFactory = $operationMetadata->formFactory) {
             $form = call_user_func_array([$controller, $formFactory], [$request->getAttributes()]);
 
@@ -151,11 +154,14 @@ class Engine
         }
 
         if (!empty($operationMetadata->parameters)) {
+            // Pluck requested parameters from the request to pass to the operation as arguments
             $arguments[] = array_intersect_key($request->getQueryParams(), array_flip($operationMetadata->parameters));
         }
 
+        // Executes the operation method on the endpoint controller, and get the response object based on the result
         $response = $this->executeOperation([$controller, $operationMetadata->name], $request, $arguments);
 
+        // Provide the ability to minimally modify the response before sending
         $adjustment = new Response\Adjustment();
         $this->dispatcher->dispatch(self::EVENT_RESPONSE_ADJUST, new GenericEvent($adjustment));
         $adjustment->adjust($response);
