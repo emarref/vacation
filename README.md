@@ -20,19 +20,32 @@ Vacation works out of the box with standard REST API requirements.
 ```yaml
 # vacation.yml
 services:
+
+    # The request matcher is responsible for taking a request and determining if it matches a controller, generally
+    # based on URL parameter.
     vacation.request_matcher:
         class:  Emarref\Vacation\Request\Matcher
         arguments:
             - @request
+            
+    # The response factory builds and returns the instance of the PSR outgoing response class based on the request and
+    # content, or from an exception or form error.
     vacation.response_factory:
         class:  Emarref\Vacation\Response\Factory
         arguments:
             - @jms.serializer
+    
+    # Controllers are registered in this registry, and is then uses the request matcher to find the appropriate
+    # controller for a given request.
     vacation.controller_registry:
         class:  Emarref\Vacation\Controller\Registry
         arguments:
             - @jms.metadata_factory
             - @vacation.request_matcher
+    
+    # The engine uses the above services to take a request and return a response. It resolves the controller for the
+    # endpoint, validates the payload if necessary, determines which operation to perform on the controller, then
+    # executes it, passing the result to the response factory.
     vacation:
         class:  Emarref\Vacation\Engine
         arguments:
