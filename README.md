@@ -1,5 +1,7 @@
 # Vacation
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/emarref/vacation?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Vacation is a generic, extensible library for implementing REST endpoints in PHP.
 
 ## Dependencies
