@@ -4,7 +4,7 @@ namespace Emarref\Vacation\Metadata;
 
 use Metadata\MergeableClassMetadata;
 
-class Resource extends MergeableClassMetadata
+class Controller extends MergeableClassMetadata
 {
     /**
      * @var string

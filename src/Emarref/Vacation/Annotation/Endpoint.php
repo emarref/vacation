@@ -2,12 +2,10 @@
 
 namespace Emarref\Vacation\Annotation;
 
-use Emarref\Vacation\Path;
-
 /**
  * @Annotation
  */
-class Resource
+class Endpoint
 {
     /**
      * @var string

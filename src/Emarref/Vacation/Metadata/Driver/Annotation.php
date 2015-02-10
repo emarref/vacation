@@ -3,9 +3,9 @@
 namespace Emarref\Vacation\Metadata\Driver;
 
 use Doctrine\Common\Annotations\Reader;
-use Emarref\Vacation\Annotation as Vacation;
+use Emarref\Vacation\Annotation\Endpoint;
+use Emarref\Vacation\Annotation\Operation;
 use Emarref\Vacation\Metadata;
-use Emarref\Vacation\Path;
 use Metadata\Driver\DriverInterface;
 
 class Annotation implements DriverInterface
@@ -25,21 +25,23 @@ class Annotation implements DriverInterface
 
     /**
      * @param \ReflectionClass $class
+     * @throws \InvalidArgumentException
      * @return \Metadata\ClassMetadata
      */
     public function loadMetadataForClass(\ReflectionClass $class)
     {
-        $resourceAnnotation = $this->reader->getClassAnnotation($class, 'Emarref\\Vacation\\Annotation\\Resource');
+        /** @var Endpoint $resourceAnnotation */
+        $resourceAnnotation = $this->reader->getClassAnnotation($class, 'Emarref\\Vacation\\Annotation\\Endpoint');
 
         if (null === $resourceAnnotation) {
             throw new \InvalidArgumentException(sprintf('Cannot get resource metadata for class "%s".', $class->getName()));
         }
 
-        $resourceMetadata = new Metadata\Resource($class->getName());
-        $resourceMetadata->path = $resourceAnnotation->getPath();
+        $controllerMetadata = new Metadata\Controller($class->getName());
+        $controllerMetadata->path = $resourceAnnotation->getPath();
 
         foreach ($class->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-            /** @var Vacation\Operation $operationAnnotation */
+            /** @var Operation $operationAnnotation */
             $operationAnnotation = $this->reader->getMethodAnnotation($method, 'Emarref\\Vacation\\Annotation\\Operation');
 
             if (null === $operationAnnotation) {
@@ -51,9 +53,9 @@ class Annotation implements DriverInterface
             $operationMetadata->parameters    = $operationAnnotation->getParameters();
             $operationMetadata->formFactory   = $operationAnnotation->getFormFactory();
 
-            $resourceMetadata->operations[] = $operationMetadata;
+            $controllerMetadata->operations[] = $operationMetadata;
         }
 
-        return $resourceMetadata;
+        return $controllerMetadata;
     }
 }
