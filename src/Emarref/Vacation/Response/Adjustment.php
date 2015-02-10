@@ -86,7 +86,7 @@ class Adjustment
             $response->setStatusCode($this->getStatusCode());
         }
 
-        $adjustedHeaders = $this->getHeaders();
+        $adjustedHeaders = (array)$this->getHeaders();
 
         if (!empty($adjustedHeaders)) {
             foreach ($adjustedHeaders as $headerName => $headerValue) {

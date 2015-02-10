@@ -42,7 +42,7 @@ class Matcher implements MatcherInterface
         // Substitute annotated placeholders with their values to match request URI
         array_walk($pathSections, function (&$section) use ($request) {
             if (0 === strpos($section, ':')) {
-                $section = $request->getAttribute(substr($section, 1));
+                $section = $request->getParameter(substr($section, 1));
             }
         });
 

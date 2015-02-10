@@ -20,4 +20,9 @@ class Operation extends MethodMetadata
      * @var string
      */
     public $formFactory;
+
+    /**
+     * @var Processor
+     */
+    public $processor;
 }

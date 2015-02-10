@@ -23,9 +23,9 @@ class Engine implements EngineInterface
     private $responseBuilder;
 
     /**
-     * @var Validation\ValidationPassInterface
+     * @var Operation\ExecutorInterface
      */
-    private $validator;
+    private $executor;
 
     /**
      * @var Controller\Resolver
@@ -33,20 +33,20 @@ class Engine implements EngineInterface
     private $controllerResolver;
 
     /**
-     * @param Controller\Resolver                $controllerResolver
-     * @param Operation\Resolver                 $operationResolver
-     * @param Validation\ValidationPassInterface $validator
-     * @param Response\BuilderInterface          $responseBuilder
+     * @param Controller\Resolver         $controllerResolver
+     * @param Operation\Resolver          $operationResolver
+     * @param Operation\ExecutorInterface $executor
+     * @param Response\BuilderInterface   $responseBuilder
      */
     public function __construct(
         Controller\Resolver $controllerResolver,
         Operation\Resolver $operationResolver,
-        Validation\ValidationPassInterface $validator,
+        Operation\ExecutorInterface $executor,
         Response\BuilderInterface $responseBuilder
     ) {
         $this->controllerResolver = $controllerResolver;
         $this->operationResolver  = $operationResolver;
-        $this->validator          = $validator;
+        $this->executor           = $executor;
         $this->responseBuilder    = $responseBuilder;
     }
 
@@ -84,40 +84,6 @@ class Engine implements EngineInterface
     }
 
     /**
-     * @param object             $controller
-     * @param Metadata\Operation $operationMetadata
-     * @param RequestInterface   $request
-     * @return Response\ResponseInterface
-     */
-    protected function executeOperation($controller, Metadata\Operation $operationMetadata, RequestInterface $request)
-    {
-        // Grab requested parameters from the GET query
-        if (!empty($operationMetadata->parameters)) {
-            // Pluck requested parameters from the request to pass to the operation as arguments
-            $arguments = array_intersect_key($request->getQueryParameters(), array_flip($operationMetadata->parameters));
-        } else {
-            $arguments = [];
-        }
-
-        // Execute the operation method on the endpoint controller
-        try {
-            $result = $operationMetadata->invoke($controller, [$arguments]);
-        } catch (Error\Client $e) {
-            return $this->responseBuilder->create($request, $e);
-        } catch (Error\Server $e) {
-            return $this->responseBuilder->create($request, $e);
-        } catch (\Exception $e) {
-            return $this->responseBuilder->create(
-                $request,
-                new Error\Server('An unknown error has occurred', Response\ResponseInterface::STATUS_SERVER_ERROR, $e)
-            );
-        }
-
-        // Return a response
-        return $this->responseBuilder->create($request, $result);
-    }
-
-    /**
      * @param RequestInterface $request
      * @throws \Exception
      * @return Response\ResponseInterface
@@ -144,17 +110,13 @@ class Engine implements EngineInterface
             );
         }
 
-        // Ensure the request from the client is valid
         try {
-            $this->validator->validate($request, $controller, $operationMetadata);
+            $result = $this->executor->execute($controller, $operationMetadata, $request);
         } catch (\Exception $e) {
-            return $this->responseBuilder->create(
-                $request,
-                new Error\Client('The request could not be processed', Response\ResponseInterface::STATUS_BAD_REQUEST, $e)
-            );
+            $result = new Error\Server('An unknown error has occurred', Response\ResponseInterface::STATUS_SERVER_ERROR, $e);
         }
 
-        // Run the operation on the controller
-        return $this->executeOperation($controller, $operationMetadata, $request);
+        // Return the result decorated as a response
+        return $this->responseBuilder->create($request, $result);
     }
 }

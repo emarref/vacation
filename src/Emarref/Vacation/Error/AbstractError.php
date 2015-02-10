@@ -17,6 +17,7 @@ abstract class AbstractError
     /**
      * @var string
      * @Serializer\Expose()
+     * @Serializer\Accessor("getMessage")
      */
     protected $message;
 
@@ -45,6 +46,12 @@ abstract class AbstractError
      */
     public function getMessage()
     {
-        return $this->message;
+        $debug = true;
+
+        if ($debug) {
+            return $this->exception->getMessage();
+        } else {
+            return $this->message;
+        }
     }
 }

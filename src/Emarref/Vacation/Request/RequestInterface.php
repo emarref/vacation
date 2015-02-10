@@ -25,6 +25,17 @@ interface RequestInterface
     public function getAttribute($attribute);
 
     /**
+     * @param string $parameter
+     * @return mixed
+     */
+    public function getParameter($parameter);
+
+    /**
+     * @return array
+     */
+    public function getAttributes();
+
+    /**
      * @return string
      */
     public function getMethod();

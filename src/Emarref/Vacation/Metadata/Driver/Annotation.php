@@ -5,6 +5,7 @@ namespace Emarref\Vacation\Metadata\Driver;
 use Doctrine\Common\Annotations\Reader;
 use Emarref\Vacation\Annotation\Endpoint;
 use Emarref\Vacation\Annotation\Operation;
+use Emarref\Vacation\Annotation\Processor;
 use Emarref\Vacation\Metadata;
 use Metadata\Driver\DriverInterface;
 
@@ -52,6 +53,16 @@ class Annotation implements DriverInterface
             $operationMetadata->requestMethod = $operationAnnotation->getRequestMethod();
             $operationMetadata->parameters    = $operationAnnotation->getParameters();
             $operationMetadata->formFactory   = $operationAnnotation->getFormFactory();
+
+            /** @var Processor $processorAnnotation */
+            $processorAnnotation = $this->reader->getMethodAnnotation($method, 'Emarref\\Vacation\\Annotation\\Processor');
+
+            if ($processorAnnotation) {
+                $processorMetadata = new Metadata\Processor();
+                $processorMetadata->name = $processorAnnotation->getName();
+                $processorMetadata->options = $processorAnnotation->getOptions();
+                $operationMetadata->processor = $processorMetadata;
+            }
 
             $controllerMetadata->operations[] = $operationMetadata;
         }
