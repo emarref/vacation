@@ -13,14 +13,14 @@ class Operation
     private $requestMethod;
 
     /**
+     * @var string
+     */
+    private $endpoint;
+
+    /**
      * @var array
      */
     private $parameters = [];
-
-    /**
-     * @var string
-     */
-    private $formFactory;
 
     /**
      * @param array $values
@@ -29,12 +29,14 @@ class Operation
     {
         $this->requestMethod = $values['value'];
 
-        if (!empty($values['parameters'])) {
-            $this->parameters = $values['parameters'];
+        if (empty($values['endpoint'])) {
+            $values['endpoint'] = 'default';
         }
 
-        if (!empty($values['formFactory'])) {
-            $this->formFactory = $values['formFactory'];
+        $this->endpoint = $values['endpoint'];
+
+        if (!empty($values['parameters'])) {
+            $this->parameters = $values['parameters'];
         }
     }
 
@@ -57,8 +59,8 @@ class Operation
     /**
      * @return string
      */
-    public function getFormFactory()
+    public function getEndpoint()
     {
-        return $this->formFactory;
+        return $this->endpoint;
     }
 }

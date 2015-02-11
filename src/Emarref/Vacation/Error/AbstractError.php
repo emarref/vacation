@@ -26,7 +26,7 @@ abstract class AbstractError
      */
     protected $exception;
 
-    public function __construct($message, $code, $exception)
+    public function __construct($message, $code, $exception = null)
     {
         $this->message   = $message;
         $this->code      = $code;
@@ -48,7 +48,7 @@ abstract class AbstractError
     {
         $debug = true;
 
-        if ($debug) {
+        if ($debug && $this->exception) {
             return $this->exception->getMessage();
         } else {
             return $this->message;

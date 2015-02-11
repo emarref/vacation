@@ -3,22 +3,25 @@
 namespace Emarref\Vacation\Processor;
 
 use Emarref\Vacation\Metadata;
+use Emarref\Vacation\Request\Context;
 use Emarref\Vacation\Request\RequestInterface;
 
 class PayloadProcessor implements ProcessorInterface
 {
+    use ParameterableProcessor;
+
     /**
-     * @param object             $controller
-     * @param Metadata\Operation $operationMetadata
-     * @param RequestInterface   $request
+     * @param RequestInterface $request
+     * @param Context          $context
      * @return mixed
      */
-    public function process($controller, Metadata\Operation $operationMetadata, RequestInterface $request)
+    public function process(RequestInterface $request, Context $context)
     {
         $arguments = [
             $request->getPayloadAsArray(),
+            $this->getParameters($request, $context),
         ];
 
-        return $operationMetadata->invoke($controller, $arguments);
+        return $context->getOperationMetadata()->invoke($context->getController(), $arguments);
     }
 }

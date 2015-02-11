@@ -31,15 +31,22 @@ class Annotation implements DriverInterface
      */
     public function loadMetadataForClass(\ReflectionClass $class)
     {
-        /** @var Endpoint $resourceAnnotation */
-        $resourceAnnotation = $this->reader->getClassAnnotation($class, 'Emarref\\Vacation\\Annotation\\Endpoint');
+        /** @var Endpoint $endpointAnnotation */
+        $endpointAnnotation = $this->reader->getClassAnnotation($class, 'Emarref\\Vacation\\Annotation\\Endpoint');
 
-        if (null === $resourceAnnotation) {
-            throw new \InvalidArgumentException(sprintf('Cannot get resource metadata for class "%s".', $class->getName()));
+        if (null === $endpointAnnotation) {
+            throw new \InvalidArgumentException(sprintf('Class "%s" is not annotated as a controller.', $class->getName()));
         }
 
         $controllerMetadata = new Metadata\Controller($class->getName());
-        $controllerMetadata->path = $resourceAnnotation->getPath();
+        /** @var Metadata\Endpoint[] $endpoints */
+        $endpoints = [];
+
+        foreach ($endpointAnnotation->getPaths() as $name => $path) {
+            $endpointMetadata = new Metadata\Endpoint($class->getName());
+            $endpointMetadata->path = $path;
+            $endpoints[$name] = $endpointMetadata;
+        }
 
         foreach ($class->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
             /** @var Operation $operationAnnotation */
@@ -52,7 +59,6 @@ class Annotation implements DriverInterface
             $operationMetadata = new Metadata\Operation($class->getName(), $method->getName());
             $operationMetadata->requestMethod = $operationAnnotation->getRequestMethod();
             $operationMetadata->parameters    = $operationAnnotation->getParameters();
-            $operationMetadata->formFactory   = $operationAnnotation->getFormFactory();
 
             /** @var Processor $processorAnnotation */
             $processorAnnotation = $this->reader->getMethodAnnotation($method, 'Emarref\\Vacation\\Annotation\\Processor');
@@ -64,8 +70,10 @@ class Annotation implements DriverInterface
                 $operationMetadata->processor = $processorMetadata;
             }
 
-            $controllerMetadata->operations[] = $operationMetadata;
+            $endpoints[$operationAnnotation->getEndpoint()]->operations[] = $operationMetadata;
         }
+
+        $controllerMetadata->endpoints = $endpoints;
 
         return $controllerMetadata;
     }

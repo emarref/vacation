@@ -2,7 +2,7 @@
 
 namespace Emarref\Vacation\Processor;
 
-use Emarref\Vacation\Metadata\Operation;
+use Emarref\Vacation\Request\Context;
 use Emarref\Vacation\Request\RequestInterface;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -14,12 +14,11 @@ abstract class ConfigurableProcessor implements ProcessorInterface, Configuratio
     protected $config;
 
     /**
-     * @param object           $controller
-     * @param Operation        $operationMetadata
      * @param RequestInterface $request
+     * @param Context          $context
      * @return mixed
      */
-    abstract protected function doProcess($controller, Operation $operationMetadata, RequestInterface $request);
+    abstract protected function doProcess(RequestInterface $request, Context $context);
 
     /**
      * @param array $config
@@ -30,14 +29,13 @@ abstract class ConfigurableProcessor implements ProcessorInterface, Configuratio
     }
 
     /**
-     * @param object           $controller
-     * @param Operation        $operationMetadata
      * @param RequestInterface $request
+     * @param Context          $context
      * @return mixed
      */
-    final public function process($controller, Operation $operationMetadata, RequestInterface $request)
+    final public function process(RequestInterface $request, Context $context)
     {
-        $result = $this->doProcess($controller, $operationMetadata, $request);
+        $result = $this->doProcess($request, $context);
         $this->config = null;
         return $result;
     }

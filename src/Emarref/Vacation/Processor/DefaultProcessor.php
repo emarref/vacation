@@ -2,27 +2,24 @@
 
 namespace Emarref\Vacation\Processor;
 
-use Emarref\Vacation\Metadata\Operation;
+use Emarref\Vacation\Request\Context;
 use Emarref\Vacation\Request\RequestInterface;
 
 class DefaultProcessor implements ProcessorInterface
 {
+    use ParameterableProcessor;
+
     /**
-     * @param object           $controller
-     * @param Operation        $operationMetadata
      * @param RequestInterface $request
+     * @param Context          $context
      * @return mixed
      */
-    public function process($controller, Operation $operationMetadata, RequestInterface $request)
+    public function process(RequestInterface $request, Context $context)
     {
-        $arguments = [];
+        $arguments = [
+            $this->getParameters($request, $context)
+        ];
 
-        if (!empty($operationMetadata->parameters)) {
-            // Pluck whitelisted parameters from the request to pass to the operation as arguments
-            $queryParameters = array_intersect_key($request->getQueryParameters(), array_flip($operationMetadata->parameters));
-            $arguments[] = $queryParameters;
-        }
-
-        return $operationMetadata->invoke($controller, $arguments);
+        return $context->getOperationMetadata()->invoke($context->getController(), $arguments);
     }
 }

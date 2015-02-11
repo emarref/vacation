@@ -4,7 +4,7 @@ namespace Emarref\Vacation\Metadata;
 
 use Metadata\MergeableClassMetadata;
 
-class Controller extends MergeableClassMetadata
+class Endpoint extends MergeableClassMetadata
 {
     /**
      * @var string
@@ -12,7 +12,7 @@ class Controller extends MergeableClassMetadata
     public $path;
 
     /**
-     * @var Endpoint[]
+     * @var Operation[]
      */
-    public $endpoints;
+    public $operations;
 }
