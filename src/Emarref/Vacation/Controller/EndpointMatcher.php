@@ -20,6 +20,10 @@ class EndpointMatcher implements EndpointMatcherInterface
         $this->prefix = $prefix;
     }
 
+    /**
+     * @param string $path
+     * @return string
+     */
     protected function normalisePath($path)
     {
         return trim($path, '/');
